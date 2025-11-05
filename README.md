@@ -22,20 +22,39 @@ The design follows current best practices:
 ---
 
 ## 2) High-level Architecture
+### Request flow
 
-```text
-    A[Discord User] -->|/task ...| B(Discord App/Gateway)
-    B --> C[Task Orchestrator]
-    C --> D[GitHub App Adapter<br/>Code Search]
-    C --> E[OpenAI Responses API]
-    C --> F[Asana API]
-    C --> G[(Config + small DB)]
-    F --> H[Asana Project<br/>"To do" Section]
-    D -->|Top-K snippets/links| C
-    E -->|JSON task payload| C
-    C -->|Asana task URL| B
-    B -->|Ephemeral reply| A
-```
+1. The user runs `/task ...` in Discord.
+2. The Discord App/Gateway forwards the request to the **Task Orchestrator**.
+3. The Task Orchestrator consults **Config + small DB** for settings and state.
+4. The Task Orchestrator fans out:
+
+   * Calls the **GitHub App Adapter / Code Search** and receives top-K snippets and links.
+   * Calls the **OpenAI Responses API** and receives a JSON task payload.
+   * Calls the **Asana API** to create a task in the target **Asana Project** under the “To do” section.
+5. Asana returns the created task. The Task Orchestrator captures the **Asana task URL**.
+6. The Task Orchestrator sends the **Asana task URL** back to the **Discord App/Gateway**.
+7. The Discord App/Gateway posts an **ephemeral reply** to the requesting **Discord User** with the task link.
+
+### Components
+
+* **Discord User**: initiates `/task`.
+* **Discord App/Gateway**: receives the command and relays responses.
+* **Task Orchestrator**: central controller for all calls and data flow.
+* **GitHub App Adapter / Code Search**: returns top-K code snippets and links.
+* **OpenAI Responses API**: returns a structured JSON task payload.
+* **Asana API**: creates the task in the project’s “To do” section.
+* **Config + small DB**: stores configuration and minimal state.
+* **Asana Project (“To do” Section)**: destination for the created task.
+
+### Data exchanged
+
+* From GitHub Adapter to Orchestrator: **top-K snippets/links**.
+* From OpenAI API to Orchestrator: **JSON task payload**.
+* From Asana API to Orchestrator: **task details and URL**.
+* From Orchestrator to Discord App/Gateway: **Asana task URL**.
+* From Discord App/Gateway to User: **ephemeral reply** containing the task link.
+
 
 ### Request sequence
 
