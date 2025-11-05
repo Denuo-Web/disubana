@@ -145,10 +145,10 @@ DISCORD_TOKEN=
 DISCORD_CLIENT_ID=
 
 # GitHub (App)
-GITHUB_APP_ID=
-GITHUB_APP_PRIVATE_KEY='-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n'
+GH_APP_ID=
+GH_APP_PRIVATE_KEY='-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n'
 # Either hardcode or resolve dynamically per org/installation:
-GITHUB_INSTALLATION_ID=
+GH_INSTALLATION_ID=
 
 # Asana
 ASANA_ACCESS_TOKEN=
@@ -350,7 +350,7 @@ The repository now includes production assets:
 After a merge to `main`, the action will:
 
 1. Run `npm ci`, `npm test`, and `npm run build`.
-2. Publish `ghcr.io/<owner>/<repo>` with both the commit SHA and `latest` tags.
+2. Publish `ghcr.io/<owner>/<repo>` (all lowercase) with both the commit SHA and `latest` tags.
 3. Update the compose file on the host and execute `docker compose pull && docker compose up -d --remove-orphans` with `IMAGE` set to the new tag.
 
 For a first-time launch (or if you need a manual rollback), SSH into the server and run:
@@ -359,6 +359,8 @@ For a first-time launch (or if you need a manual rollback), SSH into the server 
 cd $DEPLOY_PATH
 IMAGE=ghcr.io/<owner>/<repo>:latest docker compose up -d
 ```
+
+> GHCR image references must be entirely lowercase: replace `<owner>/<repo>` with a lowercase variant of your repository slug.
 
 ---
 
@@ -424,9 +426,9 @@ Choose a license that suits your organization. MIT is common for internal toolin
 |---|---|---|---|
 | `DISCORD_TOKEN` | yes | `mfa.xxxxx` | Bot token |
 | `DISCORD_CLIENT_ID` | yes | `123456789012345678` | Used when registering commands |
-| `GITHUB_APP_ID` | yes | `123456` | GitHub App identifier |
-| `GITHUB_APP_PRIVATE_KEY` | yes | `-----BEGIN PRIVATE KEY-----...` | Keep in a secrets manager |
-| `GITHUB_INSTALLATION_ID` | yes | `987654321` | Or resolve dynamically |
+| `GH_APP_ID` | yes | `123456` | GitHub App identifier |
+| `GH_APP_PRIVATE_KEY` | yes | `-----BEGIN PRIVATE KEY-----...` | Keep in a secrets manager |
+| `GH_INSTALLATION_ID` | yes | `987654321` | Or resolve dynamically |
 | `ASANA_ACCESS_TOKEN` | yes | `1/123...` | PAT or OAuth token |
 | `ASANA_PROJECT_GID` | yes | `1201234567890123` | Target project |
 | `ASANA_SECTION_GID` | yes | `1201234567890456` | “To do” section GID |
@@ -489,7 +491,12 @@ export async function handleTask(interaction: ChatInputCommandInteraction) {
 // src/services/github.ts
 import { Octokit } from '@octokit/rest';
 
-const octokit = new Octokit({ auth: process.env.GITHUB_INSTALLATION_TOKEN ?? process.env.GITHUB_TOKEN });
+const githubAuthToken =
+  process.env.GH_INSTALLATION_TOKEN ??
+  process.env.GH_TOKEN ??
+  process.env.GITHUB_TOKEN;
+
+const octokit = new Octokit(githubAuthToken ? { auth: githubAuthToken } : {});
 
 export async function findRepoContext(query: string) {
   const q = [`${query}`, `org:your-org`, `in:file`, `language:ts OR language:py`].join(' ');

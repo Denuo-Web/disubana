@@ -1,6 +1,11 @@
 import { Octokit } from '@octokit/rest';
 
-const octokit = new Octokit({ auth: process.env.GITHUB_INSTALLATION_TOKEN ?? process.env.GITHUB_TOKEN });
+const githubAuthToken =
+  process.env.GH_INSTALLATION_TOKEN ??
+  process.env.GH_TOKEN ??
+  process.env.GITHUB_TOKEN;
+
+const octokit = new Octokit(githubAuthToken ? { auth: githubAuthToken } : {});
 
 export async function findRepoContext(query: string) {
   // basic, deterministic search; tune the qualifiers for your org

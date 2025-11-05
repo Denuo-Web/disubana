@@ -25,17 +25,17 @@ The Discord settings live in the [Discord Developer Portal](https://discord.com/
 
 These values come from a GitHub App that owns the permissions to perform repository search.
 
-- `GITHUB_APP_ID`
+- `GH_APP_ID`
   1. Visit your GitHub App configuration page: `https://github.com/settings/apps/<your-app-name>`.
-  2. The **About** section lists the **App ID**. Copy it to `GITHUB_APP_ID`.
-- `GITHUB_APP_PRIVATE_KEY`
+  2. The **About** section lists the **App ID**. Copy it to `GH_APP_ID`.
+- `GH_APP_PRIVATE_KEY`
   1. On the same GitHub App page, scroll to **Private keys**.
   2. Click **Generate a private key**. GitHub downloads a `.pem` file.
   3. Open the file in a text editor and paste the full contents, including the `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----` lines, into the `.env`. Wrap it in single quotes if you keep it on one line, or use multiline syntax supported by your environment.
-- `GITHUB_INSTALLATION_ID`
+- `GH_INSTALLATION_ID`
   1. Install the GitHub App on the organization or repository that the bot should access.
   2. After installation, GitHub redirects to a URL like `https://github.com/organizations/<org>/settings/installations/<installation_id>`.
-  3. The trailing number is the `GITHUB_INSTALLATION_ID`. You can also fetch it via the REST API (`GET /app/installations`) if you prefer.
+  3. The trailing number is the `GH_INSTALLATION_ID`. You can also fetch it via the REST API (`GET /app/installations`) if you prefer.
 
 **Recommended App permissions**
 
