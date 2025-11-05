@@ -580,5 +580,3 @@ export async function createAsanaTask(params: {
 ```
 
 ---
-
-> With the above, you have a clear blueprint and a runnable skeleton. Integrate with your organization’s CI/CD, secrets management, and policy controls to move from prototype to production.
