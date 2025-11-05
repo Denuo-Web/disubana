@@ -23,8 +23,7 @@ The design follows current best practices:
 
 ## 2) High-level Architecture
 
-```mermaid
-flowchart LR
+```text
     A[Discord User] -->|/task ...| B(Discord App/Gateway)
     B --> C[Task Orchestrator]
     C --> D[GitHub App Adapter<br/>Code Search]
