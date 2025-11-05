@@ -1,0 +1,6 @@
+services:
+  bot:
+    image: ${IMAGE:?Set IMAGE to the full container reference before running docker compose}
+    restart: unless-stopped
+    env_file:
+      - .env
