@@ -30,7 +30,9 @@ export async function extractTask(input: {
       },
       { role: "user", content: `Text: ${input.describe}\nPriority: ${input.priority}\nContext:\n${input.repoContext.map(r => r.url).join('\n')}` }
     ],
-    response_format: { type: "json_schema", json_schema: schema }
+    text: {
+      format: { type: "json_schema", json_schema: schema }
+    }
   } as any);
 
   const json = JSON.parse(resp.output_text!);
