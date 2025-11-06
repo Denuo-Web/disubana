@@ -73,6 +73,7 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
             NODE_ENV=production
+            GH_TOKEN=${{ secrets.GH_TOKEN }}
           secrets: |
             DISCORD_TOKEN=DISCORD_TOKEN:latest
             DISCORD_CLIENT_ID=DISCORD_CLIENT_ID:latest

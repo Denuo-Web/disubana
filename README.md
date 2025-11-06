@@ -438,6 +438,7 @@ Choose a license that suits your organization. MIT is common for internal toolin
 | `GH_APP_ID` | yes | `123456` | GitHub App identifier |
 | `GH_APP_PRIVATE_KEY` | yes | `-----BEGIN PRIVATE KEY-----...` | Keep in a secrets manager |
 | `GH_INSTALLATION_ID` | yes | `987654321` | Or resolve dynamically |
+| `GH_TOKEN` | yes | `ghp_xxx` | PAT with `repo` scope for code search |
 | `ASANA_ACCESS_TOKEN` | yes | `1/123...` | PAT or OAuth token |
 | `ASANA_PROJECT_GID` | yes | `1201234567890123` | Target project |
 | `ASANA_SECTION_GID` | yes | `1201234567890456` | “To do” section GID |
