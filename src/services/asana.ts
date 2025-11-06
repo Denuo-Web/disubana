@@ -1,14 +1,23 @@
 import { ApiClient, TasksApi } from 'asana';
 
-const accessToken = process.env.ASANA_ACCESS_TOKEN;
-if (!accessToken) {
-  throw new Error('Missing required env var ASANA_ACCESS_TOKEN');
+let tasksApi: TasksApi | null = null;
+
+function getTasksApiInstance() {
+  if (tasksApi) {
+    return tasksApi;
+  }
+
+  const accessToken = process.env.ASANA_ACCESS_TOKEN;
+  if (!accessToken) {
+    throw new Error('Missing required env var ASANA_ACCESS_TOKEN');
+  }
+
+  const apiClient = ApiClient.instance;
+  apiClient.authentications.token.accessToken = accessToken;
+
+  tasksApi = new TasksApi(apiClient);
+  return tasksApi;
 }
-
-const apiClient = ApiClient.instance;
-apiClient.authentications.token.accessToken = accessToken;
-
-const tasksApi = new TasksApi(apiClient);
 
 export async function createAsanaTask(params: {
   name: string;
@@ -17,7 +26,8 @@ export async function createAsanaTask(params: {
   sectionRef: string; // section GID preferred; name requires lookup
 }) {
   // 1) create the task and place directly into a section using memberships
-  const response = await tasksApi.createTask({
+  const api = getTasksApiInstance();
+  const response = await api.createTask({
     data: {
       name: params.name,
       notes: params.notes,
