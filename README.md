@@ -39,7 +39,7 @@ The design follows current best practices:
 ### Components
 
 * **Discord User**: initiates `/task`.
-* **Discord App/Gateway**: receives the command and relays responses.
+* **Discord Interactions Endpoint**: Discord posts the slash-command payload to `/interactions`.
 * **Task Orchestrator**: central controller for all calls and data flow.
 * **GitHub App Adapter / Code Search**: returns top-K code snippets and links.
 * **OpenAI Responses API**: returns a structured JSON task payload.
@@ -52,8 +52,8 @@ The design follows current best practices:
 * From GitHub Adapter to Orchestrator: **top-K snippets/links**.
 * From OpenAI API to Orchestrator: **JSON task payload**.
 * From Asana API to Orchestrator: **task details and URL**.
-* From Orchestrator to Discord App/Gateway: **Asana task URL**.
-* From Discord App/Gateway to User: **ephemeral reply** containing the task link.
+* From Orchestrator to Discord Interactions Endpoint: **Asana task URL**.
+* From Discord Interactions Endpoint to User: **ephemeral reply** containing the task link.
 
 
 ### Request sequence
@@ -68,7 +68,7 @@ sequenceDiagram
     participant As as Asana
 
     U->>Di: /task describe:"…" [project, section, priority]
-    Di->>Or: Interaction payload
+    Di->>Or: HTTPS POST /interactions (signed payload)
     Or->>Gh: Search code (qualifiers: org/repo, in:file, language)
     Gh-->>Or: Top-K items (paths, URLs)
     Or->>Ai: Prompt + snippet URLs, JSON schema
@@ -161,6 +161,7 @@ Create a `.env` file for local development. In production use your cloud secret 
 # Discord
 DISCORD_TOKEN=
 DISCORD_CLIENT_ID=
+DISCORD_PUBLIC_KEY=
 
 # GitHub (App)
 GH_APP_ID=
@@ -176,6 +177,8 @@ ASANA_SECTION_GID=  # "To do" section GID is preferred over name
 # OpenAI
 OPENAI_API_KEY=
 ```
+
+Point your Discord application's **Interactions Endpoint URL** at `https://<your-service>/interactions` (Cloud Run URL or equivalent). Copy the app's **Public Key** into `DISCORD_PUBLIC_KEY` so the service can verify Discord's request signatures.
 
 > **Tip**: If you only know the Asana **section name**, you can look up its **GID** via the Asana API or UI. Using a GID avoids ambiguity and extra lookups.
 
