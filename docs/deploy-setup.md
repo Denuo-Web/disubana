@@ -42,6 +42,12 @@ gcloud services enable \
   iam.googleapis.com
 ```
 
+GitHub Actions Google Run requirement:
+
+```bash
+gcloud services enable iamcredentials.googleapis.com --project=$PROJECT_ID
+```
+
 ---
 
 ## 3. Create the Artifact Registry repository
@@ -95,6 +101,8 @@ ASANA_PROJECT_GID
 ASANA_SECTION_GID
 OPENAI_API_KEY
 ```
+
+> Use the plain secret names when configuring deployments (`DISCORD_TOKEN=DISCORD_TOKEN:latest`); the `gcloud run deploy` command rejects fully qualified paths like `projects/<id>/secrets/...`.
 
 > **Manual alternative:** To create a secret without the script, run `gcloud secrets create <NAME> --replication-policy="automatic" --project=$PROJECT_ID`, then pipe the value with `printf '%s' 'value' | gcloud secrets versions add <NAME> --data-file=- --project=$PROJECT_ID`.
 

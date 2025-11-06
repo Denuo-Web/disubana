@@ -74,13 +74,13 @@ jobs:
           env_vars: |
             NODE_ENV=production
           secrets: |
-            DISCORD_TOKEN=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/DISCORD_TOKEN:latest
-            DISCORD_CLIENT_ID=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/DISCORD_CLIENT_ID:latest
-            DISCORD_PUBLIC_KEY=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/DISCORD_PUBLIC_KEY:latest
-            GH_APP_ID=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/GH_APP_ID:latest
-            GH_APP_PRIVATE_KEY=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/GH_APP_PRIVATE_KEY:latest
-            GH_INSTALLATION_ID=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/GH_INSTALLATION_ID:latest
-            ASANA_ACCESS_TOKEN=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/ASANA_ACCESS_TOKEN:latest
-            ASANA_PROJECT_GID=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/ASANA_PROJECT_GID:latest
-            ASANA_SECTION_GID=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/ASANA_SECTION_GID:latest
-            OPENAI_API_KEY=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/OPENAI_API_KEY:latest
+            DISCORD_TOKEN=DISCORD_TOKEN:latest
+            DISCORD_CLIENT_ID=DISCORD_CLIENT_ID:latest
+            DISCORD_PUBLIC_KEY=DISCORD_PUBLIC_KEY:latest
+            GH_APP_ID=GH_APP_ID:latest
+            GH_APP_PRIVATE_KEY=GH_APP_PRIVATE_KEY:latest
+            GH_INSTALLATION_ID=GH_INSTALLATION_ID:latest
+            ASANA_ACCESS_TOKEN=ASANA_ACCESS_TOKEN:latest
+            ASANA_PROJECT_GID=ASANA_PROJECT_GID:latest
+            ASANA_SECTION_GID=ASANA_SECTION_GID:latest
+            OPENAI_API_KEY=OPENAI_API_KEY:latest
