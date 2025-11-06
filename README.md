@@ -224,7 +224,7 @@ The bot responds with an **ephemeral** message containing the Asana task URL and
 
 ## 11) GitHub search strategy
 
-- Default qualifiers: `org:<your-org> in:file language:ts|js|py|go`
+- Default qualifiers: `org:<your-org> in:file language:TypeScript|JavaScript|Python|Go`
 - Return **top-K** results (e.g., 5). Provide **URLs** and, if policy allows, small **digest snippets**.
 - Support **REST** `/search/code` and optional **GraphQL** `search(type: CODE, ...)` behind a common interface.
 - Scope queries by repo, language, filename patterns, and optionally `path` if using GraphQL or when supported by the API flavor you choose.
@@ -509,7 +509,7 @@ const githubAuthToken =
 const octokit = new Octokit(githubAuthToken ? { auth: githubAuthToken } : {});
 
 export async function findRepoContext(query: string) {
-  const q = [`${query}`, `org:your-org`, `in:file`, `language:ts OR language:py`].join(' ');
+  const q = [`${query}`, `org:your-org`, `in:file`, `language:TypeScript OR language:Python`].join(' ');
   const res = await octokit.search.code({ q, per_page: 5 });
   return res.data.items.map(i => ({ repo: i.repository.full_name, path: i.path, url: i.html_url }));
 }

@@ -13,7 +13,7 @@ export async function findRepoContext(query: string) {
     `${query}`,
     `org:your-org`,
     `in:file`,
-    `language:ts OR language:py`
+    `language:TypeScript OR language:Python`
   ].join(' ');
   const res = await octokit.search.code({ q, per_page: 5 });
   return res.data.items.map(i => ({
