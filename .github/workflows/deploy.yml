@@ -6,14 +6,14 @@ on:
       - main
 
 env:
-  REGISTRY: ghcr.io
+  IMAGE_NAME: disubana
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,10 +21,10 @@ jobs:
       - name: Derive image metadata
         id: meta
         run: |
-          IMAGE_NAME=${GITHUB_REPOSITORY,,}
-          echo "image_name=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
-          echo "sha_tag=${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-          echo "latest_tag=${REGISTRY}/${IMAGE_NAME}:latest" >> "$GITHUB_OUTPUT"
+          IMAGE_URI="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPOSITORY }}/${IMAGE_NAME}"
+          echo "image_uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
+          echo "sha_tag=${IMAGE_URI}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "latest_tag=${IMAGE_URI}:latest" >> "$GITHUB_OUTPUT"
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
@@ -37,15 +37,23 @@ jobs:
       - name: Run tests
         run: npm test -- --passWithNoTests
 
-      - name: Build
+      - name: Build TypeScript
         run: npm run build
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
 
       - name: Build and push image
         uses: docker/build-push-action@v5
@@ -56,26 +64,23 @@ jobs:
             ${{ steps.meta.outputs.sha_tag }}
             ${{ steps.meta.outputs.latest_tag }}
 
-      - name: Upload compose file to host
-        uses: appleboy/scp-action@v0.1.7
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          source: "deploy/docker-compose.yml"
-          target: "${{ secrets.DEPLOY_PATH }}"
-
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: |
-            set -euo pipefail
-            mkdir -p "${{ secrets.DEPLOY_PATH }}"
-            cd "${{ secrets.DEPLOY_PATH }}"
-            docker login ${{ env.REGISTRY }} -u "${{ secrets.GHCR_USERNAME }}" -p "${{ secrets.GHCR_PAT }}"
-            IMAGE="${{ steps.meta.outputs.sha_tag }}"
-            IMAGE="$IMAGE" docker compose pull
-            IMAGE="$IMAGE" docker compose up -d --remove-orphans
+          service: ${{ secrets.GCP_SERVICE }}
+          region: ${{ secrets.GCP_REGION }}
+          image: ${{ steps.meta.outputs.sha_tag }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          env_vars: |
+            NODE_ENV=production
+          secrets: |
+            DISCORD_TOKEN=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/DISCORD_TOKEN:latest
+            DISCORD_CLIENT_ID=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/DISCORD_CLIENT_ID:latest
+            DISCORD_PUBLIC_KEY=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/DISCORD_PUBLIC_KEY:latest
+            GH_APP_ID=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/GH_APP_ID:latest
+            GH_APP_PRIVATE_KEY=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/GH_APP_PRIVATE_KEY:latest
+            GH_INSTALLATION_ID=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/GH_INSTALLATION_ID:latest
+            ASANA_ACCESS_TOKEN=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/ASANA_ACCESS_TOKEN:latest
+            ASANA_PROJECT_GID=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/ASANA_PROJECT_GID:latest
+            ASANA_SECTION_GID=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/ASANA_SECTION_GID:latest
+            OPENAI_API_KEY=projects/${{ secrets.GCP_PROJECT_ID }}/secrets/OPENAI_API_KEY:latest

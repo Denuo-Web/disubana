@@ -348,37 +348,28 @@ CMD ["node", "dist/index.js"]
 
 ### Automated deployment
 
-The repository now includes production assets:
+The pipeline now targets **Google Cloud Run** (see `docs/deploy-setup.md` for a full checklist):
 
-- `Dockerfile` builds a multi-stage container that runs `node dist/index.js`.
-- `deploy/docker-compose.yml` references the published image via an `IMAGE` environment variable.
-- `.github/workflows/deploy.yml` runs on pushes to `main`, pushes the image to GHCR, copies the compose file to your host, and restarts the container in place.
+- `Dockerfile` builds the production image for Artifact Registry.
+- `.github/workflows/deploy.yml` runs on pushes to `main`, authenticates via Workload Identity Federation, pushes the image to Artifact Registry, and rolls out a new Cloud Run revision.
+- Runtime secrets are sourced from **Secret Manager** (one secret per environment variable).
 
-**GitHub secrets required**
+**GitHub Actions secrets required**
 
-- `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_PATH`: SSH target and directory where the compose assets live.
-- `DEPLOY_SSH_KEY`: private key with access to the host (PEM format, no passphrase).
-- `GHCR_USERNAME`, `GHCR_PAT`: credentials with `read:packages` on the host; the workflow already uses the built-in `GITHUB_TOKEN` for pushing.
-
-**Server preparation**
-
-1. Install Docker Engine and the Compose plugin.
-2. Create the directory referenced by `DEPLOY_PATH`, ensure the SSH user can run Docker, and place a production `.env` file there (same variables as local development).
+- `GCP_PROJECT_ID`: Google Cloud project ID hosting the service.
+- `GCP_REGION`: Cloud Run & Artifact Registry region (e.g., `us-central1`).
+- `GCP_ARTIFACT_REPOSITORY`: Artifact Registry Docker repository name.
+- `GCP_SERVICE`: Cloud Run service name.
+- `GCP_WORKLOAD_IDENTITY_PROVIDER`: Full resource name of the Workload Identity provider (step 6 in `docs/deploy-setup.md`).
+- `GCP_SERVICE_ACCOUNT`: Deploy service account email that the workflow impersonates.
 
 After a merge to `main`, the action will:
 
-1. Run `npm ci`, `npm test`, and `npm run build`.
-2. Publish `ghcr.io/<owner>/<repo>` (all lowercase) with both the commit SHA and `latest` tags.
-3. Update the compose file on the host and execute `docker compose pull && docker compose up -d --remove-orphans` with `IMAGE` set to the new tag.
+1. Run `npm ci`, `npm test -- --passWithNoTests`, and `npm run build`.
+2. Build the Docker image and push `REGION-docker.pkg.dev/PROJECT/REPO/disubana` with both `${GITHUB_SHA}` and `latest` tags.
+3. Deploy Cloud Run with `NODE_ENV=production` and bind each required environment variable to the latest Secret Manager version.
 
-For a first-time launch (or if you need a manual rollback), SSH into the server and run:
-
-```bash
-cd $DEPLOY_PATH
-IMAGE=ghcr.io/<owner>/<repo>:latest docker compose up -d
-```
-
-> GHCR image references must be entirely lowercase: replace `<owner>/<repo>` with a lowercase variant of your repository slug.
+> Cloud Run handles scaling and patching automatically—no SSH access, Docker hosts, or manual `.env` sync is required once the setup guide is complete.
 
 ---
 
